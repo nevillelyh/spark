@@ -1,0 +1,15 @@
+Source: spark
+Section: non-free/net
+Priority: extra
+Maintainer: Neville Li <neville@spotify.com>
+Build-Depends:
+    debhelper (>= 7),
+    oracle-java6-jdk
+Standards-Version: 3.7.3
+Homepage: https://github.com/apache/incubator-spark
+
+Package: spark
+Architecture: all
+Depends:
+    default-jre
+Description: Spark - Lightning-Fast Cluster Computing
