@@ -84,17 +84,23 @@ while (( "$#" )); do
   shift
 done
 
+
 if [ -z "$JAVA_HOME" ]; then
-  echo "Error: JAVA_HOME is not set, cannot proceed."
-  exit -1
+  if [ -L /usr/bin/javac ]; then
+    export JAVA_HOME=$(dirname $(dirname $(readlink -f /usr/bin/javac)))
+  else
+    echo "Error: JAVA_HOME is not set, cannot proceed."
+    exit -1
+  fi
 fi
 
-VERSION=$(mvn help:evaluate -Dexpression=project.version 2>/dev/null | grep -v "INFO" | tail -n 1)
-if [ $? != 0 ]; then
-    echo -e "You need Maven installed to build Spark."
-    echo -e "Download Maven from https://maven.apache.org/"
-    exit -1;
-fi
+# Skip Maven check and always download proper version.
+#VERSION=$(mvn help:evaluate -Dexpression=project.version 2>/dev/null | grep -v "INFO" | tail -n 1)
+#if [ $? != 0 ]; then
+#    echo -e "You need Maven installed to build Spark."
+#    echo -e "Download Maven from https://maven.apache.org/"
+#    exit -1;
+#fi
 
 JAVA_CMD="$JAVA_HOME"/bin/java
 JAVA_VERSION=$("$JAVA_CMD" -version 2>&1)
@@ -141,9 +147,23 @@ fi
 # Build uber fat JAR
 cd $FWDIR
 
+if [ ! -d scala-2.10.4 ]; then
+  echo "Downloading Scala..."
+  SCALA_URL="http://www.scala-lang.org/files/archive/scala-2.10.4.tgz"
+  curl -s ${SCALA_URL} | tar xz
+fi
+export SCALA_HOME=${FWDIR}/scala-2.10.4
+
+# download Maven 3
+if [ ! -d apache-maven-3.0.5 ]; then
+  echo "Downloading Maven 3..."
+  MAVEN_URL="http://mirror.tcpdiag.net/apache/maven/maven-3/3.0.5/binaries/apache-maven-3.0.5-bin.tar.gz"
+  curl -s ${MAVEN_URL} | tar xz
+fi
+
 export MAVEN_OPTS="-Xmx2g -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=512m"
 
-BUILD_COMMAND="mvn clean package"
+BUILD_COMMAND="apache-maven-3.0.5/bin/mvn clean package"
 
 # Use special profiles for hadoop versions 0.23.x, 2.2.x, 2.3.x, 2.4.x
 if [[ "$SPARK_HADOOP_VERSION" =~ ^0\.23\. ]]; then BUILD_COMMAND="$BUILD_COMMAND -Phadoop-0.23"; fi
