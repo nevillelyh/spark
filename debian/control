@@ -11,5 +11,5 @@ Homepage: https://github.com/apache/incubator-spark
 Package: spark
 Architecture: all
 Depends:
-    default-jre
+    oracle-java6-jdk
 Description: Spark - Lightning-Fast Cluster Computing
